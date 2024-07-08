@@ -20,41 +20,41 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
     let isBot = true;
 
     if (userItems.some(item => item instanceof Post && (item.subredditName !== "AskReddit" || item.url.includes("i.redd.it")))) {
-        console.log("AI Bot detection: User has posts in their history.");
+        console.log(`${user.username}: User has posts in their history.`);
         isBot = false;
     }
 
     if (userComments.some(comment => comment.parentId.startsWith(ThingPrefix.Comment))) {
-        console.log("AI Bot detection: User has non-TLC comments");
+        console.log(`${user.username}: User has non-TLC comments`);
         isBot = false;
     }
 
     if (userComments.some(item => startsWithLowerCaseRegex.test(item.body))) {
-        console.log("AI Bot detection: User has comments that start with a lower case character");
+        console.log(`${user.username}: User has comments that start with a lower case character`);
         isBot = false;
     }
 
     const maxCommentLength = settings[Setting.MaxCommentLength] as number ?? 500;
     if (userComments.some(comment => comment.body.length > maxCommentLength)) {
-        console.log("AI Bot detection: User has comments that are too long or too short.");
+        console.log(`${user.username}: User has comments that are too long or too short.`);
         isBot = false;
     }
 
     if (userComments.some(comment => comment.body.includes("\n"))) {
-        console.log("AI Bot detection: User has comments with line breaks.");
+        console.log(`${user.username}: User has comments with line breaks.`);
         isBot = false;
     }
 
     if (userComments.some(comment => comment.edited)) {
-        console.log("AI Bot detection: User has at least one edited comment");
+        console.log(`${user.username}: User has at least one edited comment`);
         isBot = false;
     }
 
     const minCommentCount = settings[Setting.MinimumCommentCount] as number ?? 3;
     if (userComments.length < minCommentCount) {
-        console.log("AI Bot detection: User doesn't have enough comments.");
+        console.log(`${user.username}: User doesn't have enough comments.`);
         if (isBot) {
-            console.log("AI Bot detection: Queued additional check for 18 hours from now.");
+            console.log(`${user.username}: Queued additional check for 18 hours from now.`);
             await context.redis.zAdd("aibotchecker-queue", {member: user.username, score: addHours(new Date(), 18).getTime()});
         }
         return;
@@ -63,7 +63,7 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
     const distinctSubs = _.uniq(userComments.map(comment => comment.subredditId));
     const diversityRatio = settings[Setting.SubredditDiversity] as number ?? 2.5;
     if (userComments.length / distinctSubs.length > diversityRatio) {
-        console.log(`AI Bot detection: Not enough sub diversity. Comment count: ${userComments.length}, Sub count: ${distinctSubs.length}`);
+        console.log(`${user.username}: Not enough sub diversity. Comment count: ${userComments.length}, Sub count: ${distinctSubs.length}`);
         isBot = false;
     }
 
@@ -75,7 +75,7 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
         return;
     }
 
-    console.log(`AI Bot detection: ${user.username} is a likely AI Bot!`);
+    console.log(`${user.username}: User is a likely AI Bot!`);
     await context.redis.del(redisKey);
 
     const [action] = settings[Setting.Action] as string[] ?? AIBotDetectionAction.None;
@@ -94,7 +94,7 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
         await Promise.all(comments.map(comment => context.reddit.report(comment, {reason: "Potential AI Bot. Check for history elsewhere and consider taking action."})));
     } else if (action === AIBotDetectionAction.BanAndRemove) {
         await Promise.all(comments.map(comment => comment.remove(true)));
-        console.log(`AI Bot detection: Removed ${comments.length} ${pluralize("comment", comments.length)} from ${user.username}`);
+        console.log(`${user.username}: Removed ${comments.length} ${pluralize("comment", comments.length)} from ${user.username}`);
 
         const banMessage = settings[Setting.BanMessage] as string ?? "LLM Bot";
         await context.reddit.banUser({
@@ -104,7 +104,7 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
             message: banMessage,
             reason: banMessage,
         });
-        console.log(`AI Bot detection: Banned ${user.username}`);
+        console.log(`${user.username}: Banned user`);
     }
 }
 
@@ -154,24 +154,24 @@ export async function checkForAIBotBehaviours (event: CommentSubmit, context: Tr
         return;
     }
 
-    console.log(`AI Bot detection: Checking ${event.author.name}`);
+    console.log(`${event.author.name}: Checking user`);
 
     let user: User;
     try {
         user = await context.reddit.getUserById(event.author.id);
     } catch {
-        console.log("AI Bot detection: User is shadowbanned.");
+        console.log(`${event.author.name}: User is shadowbanned.`);
         return;
     }
 
     const maxAccountAgeInMonths = settings[Setting.MaximumAgeMonths] as number;
     if (user.createdAt < subMonths(new Date(), maxAccountAgeInMonths)) {
-        console.log("AI Bot detection: Account is too old.");
+        console.log(`${event.author.name}: Account is too old.`);
         return;
     }
 
     if (user.commentKarma > maxKarma) {
-        console.log("AI Bot Detection: Too much karma");
+        console.log(`${event.author.name}: Too much karma`);
         return;
     }
 
@@ -193,13 +193,13 @@ export async function secondCheckForAIBots (_: ScheduledJobEvent, context: Trigg
             continue;
         }
 
-        console.log(`AI Bot detection: Second check for ${member}`);
+        console.log(`${member}: Second check for user`);
         let user: User;
         try {
             // eslint-disable-next-line no-await-in-loop
             user = await context.reddit.getUserByUsername(member);
         } catch {
-            console.log(`AI Bot detection: User ${member} is shadowbanned.`);
+            console.log(`${member}: User is shadowbanned.`);
             return;
         }
 
