@@ -199,8 +199,21 @@ export async function secondCheckForAIBots (_: ScheduledJobEvent, context: Trigg
             // eslint-disable-next-line no-await-in-loop
             user = await context.reddit.getUserByUsername(member);
         } catch {
-            console.log(`${member}: User is shadowbanned.`);
-            return;
+            console.log(`${member}: User is shadowbanned or deleted.`);
+            continue;
+        }
+
+        // Check to see if user has aged out or now has too much karma.
+        const maxAccountAgeInMonths = settings[Setting.MaximumAgeMonths] as number;
+        if (user.createdAt < subMonths(new Date(), maxAccountAgeInMonths)) {
+            console.log(`${user.username}: Account is too old.`);
+            continue;
+        }
+
+        const maxKarma = settings[Setting.MaxKarma] as number ?? 500;
+        if (user.commentKarma > maxKarma) {
+            console.log(`${user.username}: Account has too much karma.`);
+            continue;
         }
 
         // eslint-disable-next-line no-await-in-loop
