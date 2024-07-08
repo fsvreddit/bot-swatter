@@ -74,7 +74,7 @@ export const settingsForAIBotDetection: SettingsFormField[] = [
         name: Setting.SubredditDiversity,
         type: "number",
         label: "Ratio of comments to subreddits threshold",
-        helpText: "Most LLM bot accounts comment on a wide range of subreddits. This figure is the number of comments divided by the number of distinct subreddits. If the user's figure is less than this number, they won't be treated as a bot.",
+        helpText: "Most LLM bot accounts comment on a wide range of subreddits. This figure is the number of comments divided by the number of distinct subreddits. If the user's figure is greater than this number, they won't be treated as a bot.",
         defaultValue: 2.5,
     },
 ];
