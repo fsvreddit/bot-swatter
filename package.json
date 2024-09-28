@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "@devvit/public-api": "0.10.25",
-    "@types/lodash": "^4.17.6",
+    "@types/lodash": "^4.17.9",
     "@types/pluralize": "^0.0.33",
     "date-fns": "^3.6.0",
     "lodash": "^4.17.21",
@@ -20,7 +20,6 @@
     "@types/eslint__js": "^8.42.3",
     "@typescript-eslint/eslint-plugin": "^8.1.0",
     "@typescript-eslint/parser": "^8.1.0",
-    "@vitest/eslint-plugin": "^1.1.0",
     "eslint": "^9.10.0",
     "typescript": "^5.5.2",
     "typescript-eslint": "^8.4.0",

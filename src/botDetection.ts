@@ -2,11 +2,10 @@ import { Comment, Post, TriggerContext, User, SettingsValues, ScheduledJobEvent 
 import { ThingPrefix } from "./utility.js";
 import { addDays, addHours, subMonths } from "date-fns";
 import { CommentSubmit } from "@devvit/protos";
-import pluralize from "pluralize";
-import _ from "lodash";
 import { AIBotDetectionAction, Setting } from "./settings.js";
-
-const startsWithLowerCaseRegex = /^[a-z]/;
+import { usernameMatchesBotPatterns } from "./usernameRegexes.js";
+import pluralize from "pluralize";
+import { userWasPreviouslyBanned } from "./unbanTracker.js";
 
 export async function checkUserProperly (user: User, context: TriggerContext, settings: SettingsValues) {
     const userItems = await context.reddit.getCommentsAndPostsByUser({
@@ -15,7 +14,8 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
         limit: 100,
     }).all();
 
-    const userComments = userItems.filter(item => item instanceof Comment);
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cannot upload without this.
+    const userComments = userItems.filter(item => item instanceof Comment) as Comment[];
 
     let isBot = true;
 
@@ -26,11 +26,6 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
 
     if (userComments.some(comment => comment.parentId.startsWith(ThingPrefix.Comment))) {
         console.log(`${user.username}: User has non-TLC comments`);
-        isBot = false;
-    }
-
-    if (userComments.some(item => startsWithLowerCaseRegex.test(item.body))) {
-        console.log(`${user.username}: User has comments that start with a lower case character`);
         isBot = false;
     }
 
@@ -60,13 +55,6 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
         return;
     }
 
-    const distinctSubs = _.uniq(userComments.map(comment => comment.subredditId));
-    const diversityRatio = settings[Setting.SubredditDiversity] as number | undefined ?? 2.5;
-    if (userComments.length / distinctSubs.length > diversityRatio) {
-        console.log(`${user.username}: Not enough sub diversity. Comment count: ${userComments.length}, Sub count: ${distinctSubs.length}`);
-        isBot = false;
-    }
-
     const redisKey = `aibotchecker-${user.username}`;
 
     if (!isBot) {
@@ -77,6 +65,12 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
 
     console.log(`${user.username}: User is a likely AI Bot!`);
     await context.redis.del(redisKey);
+
+    const userPreviouslyUnbanned = await userWasPreviouslyBanned(user.username, context);
+    if (userPreviouslyUnbanned) {
+        console.log(`${user.username}: User was previously unbanned.`);
+        return;
+    }
 
     const [action] = settings[Setting.Action] as string[] | undefined ?? [AIBotDetectionAction.None];
 
@@ -108,18 +102,12 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
     }
 }
 
-const defaultUsernameRegex = /^(?:[A-Z][a-z]+[-_]?){2}\d+$/;
-
 export async function checkForAIBotBehaviours (event: CommentSubmit, context: TriggerContext) {
     if (!event.comment || !event.author) {
         return;
     }
 
     if (event.comment.parentId.startsWith(ThingPrefix.Comment)) {
-        return;
-    }
-
-    if (startsWithLowerCaseRegex.test(event.comment.body)) {
         return;
     }
 
@@ -144,7 +132,7 @@ export async function checkForAIBotBehaviours (event: CommentSubmit, context: Tr
         return;
     }
 
-    if (settings[Setting.AutogenUsersOnly] && !defaultUsernameRegex.test(event.author.name)) {
+    if (!usernameMatchesBotPatterns(event.author.name)) {
         return;
     }
 
@@ -193,8 +181,8 @@ export async function secondCheckForAIBots (_: ScheduledJobEvent, context: Trigg
     await context.redis.zRem("aibotchecker-queue", queue.map(item => item.member));
 
     for (const { member } of queue) {
-        if (settings[Setting.AutogenUsersOnly] && !defaultUsernameRegex.test(member)) {
-            continue;
+        if (!usernameMatchesBotPatterns(member)) {
+            return;
         }
 
         console.log(`${member}: Second check for user`);

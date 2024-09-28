@@ -1,8 +1,8 @@
-// Visit developers.reddit.com/docs to learn Devvit!
-
 import { Devvit } from "@devvit/public-api";
 import { checkForAIBotBehaviours, secondCheckForAIBots } from "./botDetection.js";
 import { settingsForAIBotDetection } from "./settings.js";
+import { installOrUpgradeHandler } from "./installTasks.js";
+import { cleanupDeletedAccounts, handleModAction } from "./unbanTracker.js";
 
 Devvit.addSettings(settingsForAIBotDetection);
 
@@ -11,24 +11,24 @@ Devvit.addTrigger({
     onEvent: checkForAIBotBehaviours,
 });
 
+Devvit.addTrigger({
+    event: "ModAction",
+    onEvent: handleModAction,
+});
+
 Devvit.addSchedulerJob({
     name: "secondCheckForAIBots",
     onRun: secondCheckForAIBots,
 });
 
+Devvit.addSchedulerJob({
+    name: "cleanupDeletedAccounts",
+    onRun: cleanupDeletedAccounts,
+});
+
 Devvit.addTrigger({
     events: ["AppInstall", "AppUpgrade"],
-    async onEvent (event, context) {
-        // Clear down existing scheduler jobs, if any, in case a new release changes the schedule
-        console.log(`Detected an ${event.type} event. Rescheduling jobs.`);
-        const currentJobs = await context.scheduler.listJobs();
-        await Promise.all(currentJobs.map(job => context.scheduler.cancelJob(job.id)));
-
-        await context.scheduler.runJob({
-            cron: "2 * * * *", // Every hour
-            name: "secondCheckForAIBots",
-        });
-    },
+    onEvent: installOrUpgradeHandler,
 });
 
 Devvit.configure({
