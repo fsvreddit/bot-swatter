@@ -92,8 +92,10 @@ export async function cleanupDeletedAccounts (_: ScheduledJobEvent, context: Tri
 }
 
 export async function addInitialUnbanData (context: TriggerContext) {
-    const previousCheckInterval = await context.redis.get("checkInterval");
-    if (previousCheckInterval === JSON.stringify(DAYS_BETWEEN_CHECKS)) {
+    const redisKey = "initialUnbanDataStored";
+
+    const initialUnbanDataStored = await context.redis.get(redisKey);
+    if (initialUnbanDataStored) {
         return;
     }
 
@@ -107,4 +109,6 @@ export async function addInitialUnbanData (context: TriggerContext) {
     const unbannedUsers = _.uniq(_.compact(modLog.filter(x => x.target?.author !== "[deleted]").map(x => x.target?.author)));
     await context.redis.zAdd(UNBAN_STORE, ...unbannedUsers.map(user => ({ member: user, score: addMinutes(new Date(), Math.random() * 60 * 24 * 2).getTime() } as ZMember)));
     console.log(`${unbannedUsers.length} ${pluralize("user", unbannedUsers.length)} added to Redis`);
+
+    await context.redis.set(redisKey, "true");
 }
