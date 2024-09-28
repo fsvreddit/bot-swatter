@@ -1,8 +1,8 @@
 // Visit developers.reddit.com/docs to learn Devvit!
 
-import {Devvit} from "@devvit/public-api";
-import {checkForAIBotBehaviours, secondCheckForAIBots} from "./botDetection.js";
-import {settingsForAIBotDetection} from "./settings.js";
+import { Devvit } from "@devvit/public-api";
+import { checkForAIBotBehaviours, secondCheckForAIBots } from "./botDetection.js";
+import { settingsForAIBotDetection } from "./settings.js";
 
 Devvit.addSettings(settingsForAIBotDetection);
 

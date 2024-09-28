@@ -1,4 +1,4 @@
-import {SettingsFormField} from "@devvit/public-api";
+import { SettingsFormField } from "@devvit/public-api";
 
 export enum Setting {
     Action = "action",
@@ -23,9 +23,9 @@ export const settingsForAIBotDetection: SettingsFormField[] = [
         type: "select",
         label: "Action to take",
         options: [
-            {label: "No action (disable)", value: AIBotDetectionAction.None},
-            {label: "Report", value: AIBotDetectionAction.Report},
-            {label: "Ban and Remove", value: AIBotDetectionAction.BanAndRemove},
+            { label: "No action (disable)", value: AIBotDetectionAction.None },
+            { label: "Report", value: AIBotDetectionAction.Report },
+            { label: "Ban and Remove", value: AIBotDetectionAction.BanAndRemove },
         ],
         defaultValue: [AIBotDetectionAction.Report],
     },
