@@ -9,6 +9,7 @@ export enum Setting {
     MaxKarma = "maximumKarma",
     MaxCommentLength = "maxCommentLength",
     SubredditDiversity = "subredditDiversity",
+    ExemptAfterUnban = "ExemptAfterUnban",
 }
 
 export enum AIBotDetectionAction {
@@ -76,5 +77,11 @@ export const settingsForAIBotDetection: SettingsFormField[] = [
         label: "Ratio of comments to subreddits threshold",
         helpText: "Most LLM bot accounts comment on a wide range of subreddits. This figure is the number of comments divided by the number of distinct subreddits. If the user's figure is greater than this number, they won't be treated as a bot.",
         defaultValue: 2.5,
+    },
+    {
+        name: Setting.ExemptAfterUnban,
+        type: "boolean",
+        label: "Do not action users who have been unbanned",
+        defaultValue: true,
     },
 ];
