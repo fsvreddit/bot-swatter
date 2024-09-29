@@ -8,12 +8,21 @@ export async function installOrUpgradeHandler (_: AppInstall | AppUpgrade, conte
     await Promise.all(existingJobs.map(job => context.scheduler.cancelJob(job.id)));
 
     // Cleanup job should run every hour. Randomise start time.
-    const minute = Math.floor(Math.random() * 60);
-    console.log(`Running cleanup job at ${minute} past the hour.`);
+    const cleanupMinute = Math.floor(Math.random() * 60);
+    const hour = Math.floor(Math.random() * 6);
+    console.log(`Cleanup will run at minute ${cleanupMinute} every 6th hour starting at hour ${hour}.`);
 
     await context.scheduler.runJob({
         name: "cleanupDeletedAccounts",
-        cron: `${minute} * * * *`,
+        cron: `${cleanupMinute} ${hour}/6 * * *`,
+    });
+
+    const secondCheckMinute = Math.floor(Math.random() * 60);
+    console.log(`Bot second checks will run at minute ${secondCheckMinute}.`);
+
+    await context.scheduler.runJob({
+        cron: `${secondCheckMinute} * * * *`,
+        name: "secondCheckForAIBots",
     });
 
     await addInitialUnbanData(context);

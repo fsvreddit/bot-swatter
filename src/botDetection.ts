@@ -6,6 +6,7 @@ import { AIBotDetectionAction, Setting } from "./settings.js";
 import { usernameMatchesBotPatterns } from "./usernameRegexes.js";
 import pluralize from "pluralize";
 import { userWasPreviouslyBanned } from "./unbanTracker.js";
+import _ from "lodash";
 
 export async function checkUserProperly (user: User, context: TriggerContext, settings: SettingsValues) {
     const userItems = await context.reddit.getCommentsAndPostsByUser({
@@ -26,6 +27,11 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
 
     if (userComments.some(comment => comment.parentId.startsWith(ThingPrefix.Comment))) {
         console.log(`${user.username}: User has non-TLC comments`);
+        isBot = false;
+    }
+
+    if (userComments.length > 1 && _.uniq(userComments.map(comment => comment.subredditName)).length === 1) {
+        console.log(`${user.username}: Comments are in one subreddit only.`);
         isBot = false;
     }
 
@@ -132,7 +138,7 @@ export async function checkForAIBotBehaviours (event: CommentSubmit, context: Tr
         return;
     }
 
-    if (!usernameMatchesBotPatterns(event.author.name)) {
+    if (!usernameMatchesBotPatterns(event.author.name, event.author.karma)) {
         return;
     }
 

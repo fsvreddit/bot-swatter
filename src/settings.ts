@@ -32,6 +32,7 @@ export const settingsForAIBotDetection: SettingsFormField[] = [
         type: "string",
         label: "Ban reason",
         defaultValue: "LLM Bot",
+        helpText: "Consider suggesting a route of appeal for false positives",
     },
     {
         name: Setting.MinimumCommentCount,

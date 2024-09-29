@@ -8,7 +8,7 @@
     "@devvit/public-api": "0.10.25",
     "@types/lodash": "^4.17.9",
     "@types/pluralize": "^0.0.33",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.0.0",
     "lodash": "^4.17.21",
     "pluralize": "^8.0.0"
   },

@@ -15,6 +15,7 @@ To be detected as a bot, all of the following must apply:
 Username patterns checked:
 
 * Usernames that superficially resemble Reddit-generated account names (Word-Word-Number) but that do NOT use any of the keywords that Reddit suggests. E.g. Laura_Harris_1624, Deborah_Phillips358
+* Reddit-generated account names but only for exceptionally low karma accounts
 * Usernames such as Margaret3U88Nelson, Elizabeth5O3Perez20, patricia0E8efimov
 * Usernames such as Patricia99kozlov, Michelle2012danilov
 * Usernames such as MichelleWilson3g33, RuthGreen1r60, Laura9l7m
