@@ -1,5 +1,7 @@
 This Devvit app looks for accounts that match the characteristics of a very specific spam wave that has been coming and going for a little over a year. It is not a generic "anti-bot" app at this stage, but may evolve into one in the future.
 
+**This app is no longer being updated with new detections. Please consider installing [Bot Bouncer](https://developers.reddit.com/apps/bot-bouncer) instead.**
+
 The specific spam wave consists of users posting top-level LLM-generated comments with a light-hearted tone. These accounts never make replies to comments, only posts, and will typically have either no posts in the user's history or occasionally an image post (e.g. in a cute animals sub) or an AskReddit post.
 
 You can choose to either report the comment for review, or ban the user. I strongly recommend that you run the app in "report" mode for a little while until you're happy that it's detecting users correctly, and only then put it into "ban and remove" mode.
@@ -27,7 +29,12 @@ This app is open source. You can find the source code on Github [here](https://g
 
 ## Change History
 
-### v1.1:
+### v1.2
+
+* Upgrade Devvit and other code dependencies
+* Notify subreddits on upgrade or first install that app is no longer being maintained with new bot detections.
+
+### v1.1
 
 * Overhaul username detections as bots have evolved. Removed options for subreddit diversity to allow very new accounts to be detected.
 * Lower default karma limit

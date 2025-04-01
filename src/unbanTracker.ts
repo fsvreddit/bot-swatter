@@ -1,5 +1,5 @@
 import { ModAction } from "@devvit/protos";
-import { ScheduledJobEvent, TriggerContext, User, ZMember } from "@devvit/public-api";
+import { TriggerContext, User, ZMember } from "@devvit/public-api";
 import { addDays, addMinutes, addSeconds } from "date-fns";
 import _ from "lodash";
 import pluralize from "pluralize";
@@ -38,7 +38,7 @@ interface UserActive {
     isActive: boolean;
 }
 
-export async function cleanupDeletedAccounts (_: ScheduledJobEvent, context: TriggerContext) {
+export async function cleanupDeletedAccounts (_: unknown, context: TriggerContext) {
     console.log("Cleanup: Starting cleanup job");
     const items = await context.redis.zRange(UNBAN_STORE, 0, new Date().getTime(), { by: "score" });
     if (items.length === 0) {
@@ -94,7 +94,7 @@ export async function cleanupDeletedAccounts (_: ScheduledJobEvent, context: Tri
 export async function addInitialUnbanData (context: TriggerContext) {
     const redisKey = "initialUnbanDataStored";
 
-    const initialUnbanDataStored = await context.redis.get(redisKey);
+    const initialUnbanDataStored = await context.redis.exists(redisKey);
     if (initialUnbanDataStored) {
         return;
     }

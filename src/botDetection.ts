@@ -1,5 +1,4 @@
-import { Comment, Post, TriggerContext, User, SettingsValues, ScheduledJobEvent } from "@devvit/public-api";
-import { ThingPrefix } from "./utility.js";
+import { Comment, Post, TriggerContext, User, SettingsValues } from "@devvit/public-api";
 import { addDays, addHours, subMonths } from "date-fns";
 import { CommentSubmit } from "@devvit/protos";
 import { AIBotDetectionAction, Setting } from "./settings.js";
@@ -7,6 +6,7 @@ import { usernameMatchesBotPatterns } from "./usernameRegexes.js";
 import pluralize from "pluralize";
 import { userWasPreviouslyBanned } from "./unbanTracker.js";
 import _ from "lodash";
+import { isCommentId } from "@devvit/shared-types/tid.js";
 
 export async function checkUserProperly (user: User, context: TriggerContext, settings: SettingsValues) {
     const userItems = await context.reddit.getCommentsAndPostsByUser({
@@ -25,7 +25,7 @@ export async function checkUserProperly (user: User, context: TriggerContext, se
         isBot = false;
     }
 
-    if (userComments.some(comment => comment.parentId.startsWith(ThingPrefix.Comment))) {
+    if (userComments.some(comment => isCommentId(comment.parentId))) {
         console.log(`${user.username}: User has non-TLC comments`);
         isBot = false;
     }
@@ -113,7 +113,7 @@ export async function checkForAIBotBehaviours (event: CommentSubmit, context: Tr
         return;
     }
 
-    if (event.comment.parentId.startsWith(ThingPrefix.Comment)) {
+    if (isCommentId(event.comment.parentId)) {
         return;
     }
 
@@ -176,7 +176,7 @@ export async function checkForAIBotBehaviours (event: CommentSubmit, context: Tr
     await checkUserProperly(user, context, settings);
 }
 
-export async function secondCheckForAIBots (_: ScheduledJobEvent, context: TriggerContext) {
+export async function secondCheckForAIBots (_: unknown, context: TriggerContext) {
     const settings = await context.settings.getAll();
 
     const queue = await context.redis.zRange("aibotchecker-queue", 0, new Date().getTime(), { by: "score" });
